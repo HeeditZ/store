@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Store Team Chat</title>
+    <title>Store Chat - Live Support</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.0/peerjs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,246 +14,299 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.3s ease;
         }
 
-        .container {
-            width: 95%;
-            max-width: 1200px;
-            height: 90vh;
+        .login-container {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-            display: flex;
-            overflow: hidden;
-            animation: slideUp 0.6s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 300px;
-            background: #34495e;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            border-radius: 20px 0 0 20px;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            background: linear-gradient(45deg, #2c3e50, #34495e);
-            border-radius: 20px 0 0 0;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             text-align: center;
-            position: relative;
+            max-width: 400px;
+            width: 90%;
         }
 
-        .sidebar-header h2 {
-            margin-bottom: 10px;
-            font-size: 1.4em;
+        .login-container h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
         }
 
-        .language-selector {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .user-setup {
-            padding: 20px;
-            border-bottom: 1px solid #2c3e50;
-        }
-
-        .user-setup input, .user-setup select {
+        .login-form input {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
         }
 
-        .user-setup input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
+        .login-form input:focus {
+            outline: none;
+            border-color: #4CAF50;
         }
 
-        .user-setup select {
-            cursor: pointer;
-        }
-
-        .user-setup select option {
-            background: #34495e;
-            color: white;
-        }
-
-        .join-button {
+        .login-form button {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(45deg, #3498db, #2980b9);
+            padding: 15px;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
+            font-size: 16px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            transition: transform 0.2s;
         }
 
-        .join-button:hover {
+        .login-form button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
         }
 
-        .online-users {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
+        .peer-id-display {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px dashed #4CAF50;
         }
 
-        .online-users h3 {
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            color: #ecf0f1;
+        .peer-id-display strong {
+            display: block;
+            margin-bottom: 10px;
+            color: #4CAF50;
         }
 
-        .user-list {
-            list-style: none;
-        }
-
-        .user-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .user-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateX(5px);
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .peer-id-code {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
             font-weight: bold;
-            margin-right: 12px;
-            font-size: 14px;
+            color: #333;
+            letter-spacing: 1px;
         }
 
-        .user-info {
-            flex: 1;
-        }
-
-        .user-name {
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .user-role {
-            font-size: 12px;
-            opacity: 0.8;
-            margin-top: 2px;
-        }
-
-        .role-manager { color: #e74c3c; }
-        .role-supervisor { color: #f39c12; }
-        .role-employee { color: #2ecc71; }
-
-        .online-status {
-            width: 8px;
-            height: 8px;
-            background: #2ecc71;
-            border-radius: 50%;
-            margin-left: 8px;
-        }
-
-        /* Main Chat */
-        .chat-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
-        }
-
-        .chat-header {
-            padding: 20px;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .chat-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .online-count {
-            background: #2ecc71;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
+        .connect-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
         }
 
         .chat-container {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: none;
             flex-direction: column;
-            gap: 15px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .connection-status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .language-selector select {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
             background: #f8f9fa;
         }
 
         .message {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 18px;
-            animation: messageSlide 0.3s ease-out;
-            word-wrap: break-word;
-            position: relative;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-out;
         }
 
-        @keyframes messageSlide {
+        .message.own {
+            text-align: right;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.own .message-bubble {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .message:not(.own) .message-bubble {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.system .message-bubble {
+            background: #ffc107;
+            color: #333;
+            font-style: italic;
+            margin: 0 auto;
+        }
+
+        .message-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .message.own .message-info {
+            text-align: right;
+        }
+
+        .file-preview {
+            margin-top: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 300px;
+        }
+
+        .file-preview img, .file-preview video {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .file-download {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: inline-block;
+            text-decoration: none;
+            color: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .file-download:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .file-drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-drop-zone.drag-over {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            resize: none;
+            font-family: inherit;
+            max-height: 100px;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .send-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
+
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .rtl .message:not(.own) {
+            text-align: left;
+        }
+
+        .rtl .message.own {
+            text-align: right;
+        }
+
+        @keyframes slideIn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
@@ -263,869 +317,494 @@
             }
         }
 
-        .message.own {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
+        .share-section {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
         }
 
-        .message.manager {
-            border-left: 4px solid #e74c3c;
-            background: #fff5f5;
-        }
-
-        .message.supervisor {
-            border-left: 4px solid #f39c12;
-            background: #fffbf0;
-        }
-
-        .message.employee {
-            border-left: 4px solid #2ecc71;
-            background: #f0fff4;
-        }
-
-        .message-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            gap: 10px;
-        }
-
-        .message-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-            color: white;
-        }
-
-        .message-info {
-            flex: 1;
-        }
-
-        .message-sender {
-            font-weight: bold;
-            font-size: 14px;
-            color: #2c3e50;
-        }
-
-        .message.own .message-sender {
-            color: white;
-        }
-
-        .message-time {
-            font-size: 11px;
-            opacity: 0.7;
-        }
-
-        .message-content {
-            margin-top: 5px;
-            line-height: 1.4;
-        }
-
-        .file-preview {
-            margin-top: 12px;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 8px;
-            border: 1px dashed rgba(0, 0, 0, 0.1);
-        }
-
-        .message.own .file-preview {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px dashed rgba(255, 255, 255, 0.3);
-        }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .file-icon {
-            width: 40px;
-            height: 40px;
-            background: #3498db;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
-        }
-
-        .file-details {
-            flex: 1;
-        }
-
-        .file-name {
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .file-size {
-            font-size: 11px;
-            opacity: 0.7;
-            margin-top: 2px;
-        }
-
-        /* Input Area */
-        .input-container {
-            padding: 20px;
-            background: white;
-            border-top: 2px solid #e9ecef;
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-        }
-
-        .input-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .message-input {
-            width: 100%;
-            padding: 15px 50px 15px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 25px;
-            font-size: 16px;
-            resize: none;
-            max-height: 120px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .message-input:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-            background: white;
-        }
-
-        .file-input-label {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #3498db;
-            font-size: 18px;
-            transition: all 0.3s ease;
-        }
-
-        .file-input-label:hover {
-            color: #2980b9;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .send-button {
-            background: linear-gradient(45deg, #3498db, #2980b9);
+        .copy-button {
+            background: #4CAF50;
             color: white;
             border: none;
-            padding: 15px 20px;
-            border-radius: 50%;
+            padding: 8px 15px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            margin-left: 10px;
         }
 
-        .send-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-        }
-
-        .send-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Welcome Screen */
-        .welcome-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            text-align: center;
-            color: #7f8c8d;
-        }
-
-        .welcome-screen h2 {
-            font-size: 2em;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-
-        .welcome-screen p {
-            font-size: 1.1em;
-            line-height: 1.6;
-            max-width: 400px;
-        }
-
-        /* Responsive Design */
         @media (max-width: 768px) {
-            .container {
-                width: 100%;
-                height: 100vh;
-                border-radius: 0;
+            .chat-container {
+                width: 95%;
+                height: 95vh;
+            }
+            
+            .chat-header {
+                padding: 15px;
                 flex-direction: column;
+                gap: 10px;
             }
             
-            .sidebar {
-                width: 100%;
-                height: auto;
-                border-radius: 0;
+            .message-bubble {
+                max-width: 85%;
             }
-            
-            .chat-main {
-                flex: 1;
-            }
-            
-            .message {
-                max-width: 90%;
-            }
-        }
-
-        /* RTL Support */
-        [dir="rtl"] .message.own {
-            align-self: flex-start;
-        }
-
-        [dir="rtl"] .message:not(.own) {
-            align-self: flex-end;
-        }
-
-        [dir="rtl"] .language-selector {
-            right: auto;
-            left: 15px;
-        }
-
-        [dir="rtl"] .file-input-label {
-            right: auto;
-            left: 15px;
-        }
-
-        /* Scrollbar */
-        .chat-container::-webkit-scrollbar,
-        .online-users::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .chat-container::-webkit-scrollbar-track,
-        .online-users::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-
-        .chat-container::-webkit-scrollbar-thumb,
-        .online-users::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            border-radius: 3px;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 15px 20px;
-            background: white;
-            border-radius: 18px;
-            max-width: 70%;
-            align-self: flex-start;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #95a5a6;
-        }
-
-        .typing-text {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-right: 10px;
-        }
-
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: #3498db;
-            border-radius: 50%;
-            animation: typing 1.4s infinite;
-        }
-
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-8px); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2 data-translate="team_chat">Team Chat</h2>
-                <p data-translate="store_internal">Store Internal Communication</p>
-                <select class="language-selector" id="languageSelector">
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <h1 data-en="Welcome to Store Chat" data-ar="مرحباً بك في محادثة المتجر" data-fr="Bienvenue dans le Chat du Magasin">Welcome to Store Chat</h1>
+        
+        <form class="login-form" id="loginForm">
+            <input 
+                type="text" 
+                id="nameInput" 
+                placeholder="Enter your name..." 
+                data-en="Enter your name..." 
+                data-ar="أدخل اسمك..." 
+                data-fr="Entrez votre nom..."
+                required 
+                maxlength="30"
+            >
+            <button type="submit" data-en="Join Chat" data-ar="انضم للمحادثة" data-fr="Rejoindre le Chat">Join Chat</button>
+        </form>
+
+        <!-- Peer ID Display -->
+        <div class="peer-id-display" id="peerIdDisplay" style="display: none;">
+            <strong data-en="Your Chat ID:" data-ar="معرف المحادثة الخاص بك:" data-fr="Votre ID de Chat:">Your Chat ID:</strong>
+            <div class="peer-id-code" id="peerIdCode"></div>
+        </div>
+
+        <!-- Connect to peer section -->
+        <div class="connect-section" id="connectSection" style="display: none;">
+            <input 
+                type="text" 
+                id="connectPeerInput" 
+                placeholder="Enter Chat ID to connect..." 
+                data-en="Enter Chat ID to connect..." 
+                data-ar="أدخل معرف المحادثة للاتصال..." 
+                data-fr="Entrez l'ID de Chat pour vous connecter..."
+            >
+            <button type="button" onclick="connectToPeer()" data-en="Connect" data-ar="اتصال" data-fr="Se connecter">Connect</button>
+        </div>
+
+        <!-- Share section -->
+        <div class="share-section" id="shareSection" style="display: none;">
+            <p data-en="Share this ID with others to start chatting:" data-ar="شارك هذا المعرف مع الآخرين لبدء المحادثة:" data-fr="Partagez cet ID avec d'autres pour commencer à chatter:">Share this ID with others to start chatting:</p>
+            <div style="display: flex; align-items: center; margin-top: 10px;">
+                <input type="text" id="shareLink" readonly style="flex: 1; padding: 8px;">
+                <button class="copy-button" onclick="copyShareLink()" data-en="Copy" data-ar="نسخ" data-fr="Copier">Copy</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <select id="loginLanguageSelect" onchange="changeLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="ar">العربية</option>
+                <option value="fr">Français</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="user-info">
+                <span id="welcomeText" data-en="Welcome" data-ar="مرحباً" data-fr="Bienvenue">Welcome</span>
+                <strong id="currentUserName"></strong>
+                <div class="connection-status" id="connectionStatus">
+                    <span data-en="Connecting..." data-ar="جاري الاتصال..." data-fr="Connexion...">Connecting...</span>
+                </div>
+            </div>
+            <div class="language-selector">
+                <select id="languageSelect" onchange="changeLanguage(this.value)">
                     <option value="en">English</option>
                     <option value="ar">العربية</option>
                     <option value="fr">Français</option>
                 </select>
             </div>
-
-            <div class="user-setup" id="userSetup">
-                <input type="text" id="usernameInput" data-translate-placeholder="enter_name" placeholder="Enter your name...">
-                <select id="roleSelect">
-                    <option value="employee" data-translate="employee">Employee</option>
-                    <option value="supervisor" data-translate="supervisor">Supervisor</option>
-                    <option value="manager" data-translate="manager">Manager</option>
-                </select>
-                <button class="join-button" id="joinButton" data-translate="join_chat">Join Chat</button>
-            </div>
-
-            <div class="online-users">
-                <h3 data-translate="online_team">Online Team <span id="onlineCount">(0)</span></h3>
-                <ul class="user-list" id="userList"></ul>
-            </div>
         </div>
 
-        <!-- Main Chat Area -->
-        <div class="chat-main">
-            <div class="chat-header">
-                <div class="chat-title" data-translate="general_chat">General Chat</div>
-                <div class="online-count">
-                    <span data-translate="active_now">Active Now</span>: <span id="activeCount">0</span>
+        <div class="chat-messages" id="chatMessages"></div>
+
+        <div class="chat-input-area">
+            <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('fileInput').click()">
+                <div id="dropText" data-en="Click to upload files or drag and drop here" data-ar="انقر لرفع الملفات أو اسحب وأفلت هنا" data-fr="Cliquez pour télécharger des fichiers ou glissez-déposez ici">
+                    Click to upload files or drag and drop here
+                </div>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;" id="supportedFiles" data-en="Supports images, videos, documents" data-ar="يدعم الصور والفيديوهات والمستندات" data-fr="Supporte les images, vidéos, documents">
+                    Supports images, videos, documents
                 </div>
             </div>
 
-            <div class="chat-container" id="chatContainer">
-                <div class="welcome-screen">
-                    <h2 data-translate="welcome_team">Welcome to Team Chat</h2>
-                    <p data-translate="welcome_message">Join the conversation to start chatting with your team members. Share updates, files, and collaborate effectively.</p>
-                </div>
+            <div class="input-row">
+                <textarea 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="Type your message..." 
+                    data-en="Type your message..." 
+                    data-ar="اكتب رسالتك..." 
+                    data-fr="Tapez votre message..."
+                    rows="1"
+                ></textarea>
+                <button class="send-button" id="sendButton" onclick="sendMessage()">➤</button>
             </div>
 
-            <div class="input-container" id="inputContainer" style="display: none;">
-                <div class="input-wrapper">
-                    <textarea class="message-input" id="messageInput" data-translate-placeholder="type_message" placeholder="Type your message..." rows="1"></textarea>
-                    <label for="fileInput" class="file-input-label">📎</label>
-                    <input type="file" class="file-input" id="fileInput" multiple>
-                </div>
-                <button class="send-button" id="sendButton">➤</button>
-            </div>
+            <input type="file" id="fileInput" class="hidden-file-input" multiple accept="*/*">
         </div>
     </div>
 
     <script>
-        // Translations
+        let peer;
+        let connections = new Map();
+        let currentUser = '';
+        let currentLanguage = 'en';
+        let myPeerId = '';
+        
         const translations = {
             en: {
-                team_chat: "Team Chat",
-                store_internal: "Store Internal Communication",
-                enter_name: "Enter your name...",
-                employee: "Employee",
-                supervisor: "Supervisor", 
-                manager: "Manager",
-                join_chat: "Join Chat",
-                online_team: "Online Team",
-                general_chat: "General Chat",
-                active_now: "Active Now",
-                welcome_team: "Welcome to Team Chat",
-                welcome_message: "Join the conversation to start chatting with your team members. Share updates, files, and collaborate effectively.",
-                type_message: "Type your message...",
-                you: "You",
-                now: "now",
-                minutes_ago: "min ago",
-                hours_ago: "hours ago",
-                is_typing: "is typing..."
+                'Welcome to Store Chat': 'Welcome to Store Chat',
+                'Enter your name...': 'Enter your name...',
+                'Join Chat': 'Join Chat',
+                'Welcome': 'Welcome',
+                'Connecting...': 'Connecting...',
+                'Connected': 'Connected',
+                'Waiting for connection': 'Waiting for connection',
+                'Type your message...': 'Type your message...',
+                'Click to upload files or drag and drop here': 'Click to upload files or drag and drop here',
+                'Supports images, videos, documents': 'Supports images, videos, documents',
+                'You': 'You',
+                'File shared': 'File shared',
+                'joined the chat': 'joined the chat',
+                'left the chat': 'left the chat',
+                'Your Chat ID:': 'Your Chat ID:',
+                'Enter Chat ID to connect...': 'Enter Chat ID to connect...',
+                'Connect': 'Connect',
+                'Share this ID with others to start chatting:': 'Share this ID with others to start chatting:',
+                'Copy': 'Copy'
             },
             ar: {
-                team_chat: "دردشة الفريق",
-                store_internal: "التواصل الداخلي للمتجر",
-                enter_name: "أدخل اسمك...",
-                employee: "موظف",
-                supervisor: "مشرف",
-                manager: "مدير",
-                join_chat: "انضم للدردشة",
-                online_team: "الفريق المتصل",
-                general_chat: "الدردشة العامة",
-                active_now: "نشط الآن",
-                welcome_team: "مرحباً بك في دردشة الفريق",
-                welcome_message: "انضم إلى المحادثة لبدء الدردشة مع أعضاء فريقك. شارك التحديثات والملفات وتعاون بفعالية.",
-                type_message: "اكتب رسالتك...",
-                you: "أنت",
-                now: "الآن",
-                minutes_ago: "منذ دقائق",
-                hours_ago: "منذ ساعات",
-                is_typing: "يكتب..."
+                'Welcome to Store Chat': 'مرحباً بك في محادثة المتجر',
+                'Enter your name...': 'أدخل اسمك...',
+                'Join Chat': 'انضم للمحادثة',
+                'Welcome': 'مرحباً',
+                'Connecting...': 'جاري الاتصال...',
+                'Connected': 'متصل',
+                'Waiting for connection': 'في انتظار الاتصال',
+                'Type your message...': 'اكتب رسالتك...',
+                'Click to upload files or drag and drop here': 'انقر لرفع الملفات أو اسحب وأفلت هنا',
+                'Supports images, videos, documents': 'يدعم الصور والفيديوهات والمستندات',
+                'You': 'أنت',
+                'File shared': 'تم مشاركة الملف',
+                'joined the chat': 'انضم إلى المحادثة',
+                'left the chat': 'غادر المحادثة',
+                'Your Chat ID:': 'معرف المحادثة الخاص بك:',
+                'Enter Chat ID to connect...': 'أدخل معرف المحادثة للاتصال...',
+                'Connect': 'اتصال',
+                'Share this ID with others to start chatting:': 'شارك هذا المعرف مع الآخرين لبدء المحادثة:',
+                'Copy': 'نسخ'
             },
             fr: {
-                team_chat: "Chat d'Équipe",
-                store_internal: "Communication Interne du Magasin",
-                enter_name: "Entrez votre nom...",
-                employee: "Employé",
-                supervisor: "Superviseur",
-                manager: "Manager",
-                join_chat: "Rejoindre le Chat",
-                online_team: "Équipe en Ligne",
-                general_chat: "Chat Général",
-                active_now: "Actif Maintenant",
-                welcome_team: "Bienvenue dans le Chat d'Équipe",
-                welcome_message: "Rejoignez la conversation pour commencer à discuter avec vos coéquipiers. Partagez des mises à jour, des fichiers et collaborez efficacement.",
-                type_message: "Tapez votre message...",
-                you: "Vous",
-                now: "maintenant",
-                minutes_ago: "il y a min",
-                hours_ago: "il y a heures",
-                is_typing: "tape..."
+                'Welcome to Store Chat': 'Bienvenue dans le Chat du Magasin',
+                'Enter your name...': 'Entrez votre nom...',
+                'Join Chat': 'Rejoindre le Chat',
+                'Welcome': 'Bienvenue',
+                'Connecting...': 'Connexion...',
+                'Connected': 'Connecté',
+                'Waiting for connection': 'En attente de connexion',
+                'Type your message...': 'Tapez votre message...',
+                'Click to upload files or drag and drop here': 'Cliquez pour télécharger des fichiers ou glissez-déposez ici',
+                'Supports images, videos, documents': 'Supporte les images, vidéos, documents',
+                'You': 'Vous',
+                'File shared': 'Fichier partagé',
+                'joined the chat': 'a rejoint le chat',
+                'left the chat': 'a quitté le chat',
+                'Your Chat ID:': 'Votre ID de Chat:',
+                'Enter Chat ID to connect...': 'Entrez l\'ID de Chat pour vous connecter...',
+                'Connect': 'Se connecter',
+                'Share this ID with others to start chatting:': 'Partagez cet ID avec d\'autres pour commencer à chatter:',
+                'Copy': 'Copier'
             }
         };
 
-        // App State
-        let currentLanguage = 'en';
-        let currentUser = null;
-        let messages = [];
-        let onlineUsers = [];
-        let isJoined = false;
-
-        // Demo users for simulation
-        const demoUsers = [
-            { name: "Sarah Johnson", role: "manager", avatar: "SJ" },
-            { name: "Ahmed Ali", role: "supervisor", avatar: "AA" },
-            { name: "Lisa Chen", role: "employee", avatar: "LC" },
-            { name: "Omar Hassan", role: "employee", avatar: "OH" },
-            { name: "Emma Wilson", role: "supervisor", avatar: "EW" }
-        ];
-
-        // DOM Elements
-        const languageSelector = document.getElementById('languageSelector');
-        const usernameInput = document.getElementById('usernameInput');
-        const roleSelect = document.getElementById('roleSelect');
-        const joinButton = document.getElementById('joinButton');
-        const userSetup = document.getElementById('userSetup');
-        const userList = document.getElementById('userList');
-        const onlineCount = document.getElementById('onlineCount');
-        const activeCount = document.getElementById('activeCount');
-        const chatContainer = document.getElementById('chatContainer');
-        const inputContainer = document.getElementById('inputContainer');
-        const messageInput = document.getElementById('messageInput');
-        const fileInput = document.getElementById('fileInput');
-        const sendButton = document.getElementById('sendButton');
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            updateLanguage();
-            simulateOnlineUsers();
+        // Language functions
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            document.body.className = lang === 'ar' ? 'rtl' : '';
             
-            // Simulate periodic activity
-            setInterval(simulateUserActivity, 30000);
+            document.querySelectorAll('[data-' + lang + ']').forEach(el => {
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    el.placeholder = el.getAttribute('data-' + lang);
+                } else {
+                    el.textContent = el.getAttribute('data-' + lang);
+                }
+            });
+            
+            document.getElementById('languageSelect').value = lang;
+            document.getElementById('loginLanguageSelect').value = lang;
+        }
+
+        // Initialize PeerJS
+        function initializePeer() {
+            // Use PeerJS cloud service (free)
+            peer = new Peer({
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:global.stun.twilio.com:3478' }
+                    ]
+                }
+            });
+
+            peer.on('open', (id) => {
+                myPeerId = id;
+                document.getElementById('peerIdCode').textContent = id;
+                document.getElementById('shareLink').value = window.location.href + '?connect=' + id;
+                document.getElementById('peerIdDisplay').style.display = 'block';
+                document.getElementById('connectSection').style.display = 'block';
+                document.getElementById('shareSection').style.display = 'block';
+                
+                updateConnectionStatus('Waiting for connection');
+                
+                // Check if there's a peer to connect to in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const connectTo = urlParams.get('connect');
+                if (connectTo && connectTo !== id) {
+                    document.getElementById('connectPeerInput').value = connectTo;
+                }
+            });
+
+            peer.on('connection', (conn) => {
+                setupConnection(conn);
+            });
+
+            peer.on('error', (err) => {
+                console.error('Peer error:', err);
+                addMessage('System', 'Connection error: ' + err.message, 'system');
+            });
+        }
+
+        function setupConnection(conn) {
+            connections.set(conn.peer, conn);
+            
+            conn.on('open', () => {
+                updateConnectionStatus('Connected');
+                addMessage('System', `Connected to peer`, 'system');
+                
+                // Send welcome message
+                conn.send({
+                    type: 'message',
+                    user: currentUser,
+                    message: `${currentUser} ${translations[currentLanguage]['joined the chat']}`,
+                    timestamp: new Date().toISOString()
+                });
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'message') {
+                    addMessage(data.user, data.message, 'other');
+                } else if (data.type === 'file') {
+                    addMessage(data.user, `${translations[currentLanguage]['File shared']}: ${data.file.name}`, 'other', data.file);
+                }
+            });
+
+            conn.on('close', () => {
+                connections.delete(conn.peer);
+                updateConnectionStatus('Disconnected');
+                addMessage('System', 'Peer disconnected', 'system');
+            });
+        }
+
+        function connectToPeer() {
+            const peerId = document.getElementById('connectPeerInput').value.trim();
+            if (peerId && peerId !== myPeerId) {
+                const conn = peer.connect(peerId);
+                setupConnection(conn);
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.innerHTML = `<span data-${currentLanguage}="${status}">${translations[currentLanguage][status] || status}</span>`;
+        }
+
+        function copyShareLink() {
+            const shareLink = document.getElementById('shareLink');
+            shareLink.select();
+            document.execCommand('copy');
+            
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✓';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 1000);
+        }
+
+        // Login handling
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('nameInput').value.trim();
+            if (name && name.length >= 2) {
+                currentUser = name;
+                document.getElementById('currentUserName').textContent = name;
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('chatContainer').style.display = 'flex';
+                initializePeer();
+                setupFileHandling();
+                setupMessageInput();
+            }
         });
 
-        // Language Management
-        languageSelector.addEventListener('change', function() {
-            currentLanguage = this.value;
-            document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
-            document.documentElement.lang = currentLanguage;
-            updateLanguage();
-        });
+        function setupFileHandling() {
+            const fileInput = document.getElementById('fileInput');
+            const dropZone = document.getElementById('fileDropZone');
 
-        function updateLanguage() {
-            const elements = document.querySelectorAll('[data-translate]');
-            elements.forEach(element => {
-                const key = element.getAttribute('data-translate');
-                if (translations[currentLanguage][key]) {
-                    element.textContent = translations[currentLanguage][key];
-                }
+            fileInput.addEventListener('change', handleFiles);
+
+            // Drag and drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
             });
 
-            const placeholderElements = document.querySelectorAll('[data-translate-placeholder]');
-            placeholderElements.forEach(element => {
-                const key = element.getAttribute('data-translate-placeholder');
-                if (translations[currentLanguage][key]) {
-                    element.placeholder = translations[currentLanguage][key];
-                }
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
             });
 
-            // Update role select options
-            const options = roleSelect.querySelectorAll('option');
-            options.forEach(option => {
-                const key = option.getAttribute('data-translate');
-                if (key && translations[currentLanguage][key]) {
-                    option.textContent = translations[currentLanguage][key];
-                }
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                handleFiles({ target: { files } });
             });
         }
 
-        // User Management
-        joinButton.addEventListener('click', joinChat);
-
-        function joinChat() {
-            const username = usernameInput.value.trim();
-            const role = roleSelect.value;
+        function handleFiles(event) {
+            const files = Array.from(event.target.files);
             
-            if (!username) {
-                usernameInput.focus();
-                return;
-            }
-
-            currentUser = {
-                name: username,
-                role: role,
-                avatar: getInitials(username),
-                joinTime: new Date()
-            };
-
-            isJoined = true;
-            userSetup.style.display = 'none';
-            inputContainer.style.display = 'flex';
-            
-            // Clear welcome screen
-            chatContainer.innerHTML = '';
-            
-            // Add user to online list
-            onlineUsers.push(currentUser);
-            updateUserList();
-            
-            // Add join message
-            addSystemMessage(`${username} ${translations[currentLanguage].join_chat || 'joined the chat'}`);
-            
-            // Start periodic message simulation
-            setTimeout(simulateTeamMessages, 5000);
-        }
-
-        function simulateOnlineUsers() {
-            // Add some demo users
-            const activeDemo = demoUsers.slice(0, Math.floor(Math.random() * 3) + 2);
-            onlineUsers.push(...activeDemo);
-            updateUserList();
-        }
-
-        function simulateUserActivity() {
-            // Randomly add/remove demo users
-            if (Math.random() < 0.3 && onlineUsers.length < 8) {
-                const availableUsers = demoUsers.filter(demo => 
-                    !onlineUsers.find(user => user.name === demo.name)
-                );
-                if (availableUsers.length > 0) {
-                    const newUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
-                    onlineUsers.push(newUser);
-                    updateUserList();
-                    addSystemMessage(`${newUser.name} joined the chat`);
-                }
-            }
-        }
-
-        function updateUserList() {
-            userList.innerHTML = '';
-            onlineUsers.forEach(user => {
-                const li = document.createElement('li');
-                li.className = 'user-item';
-                li.innerHTML = `
-                    <div class="user-avatar" style="background: ${getRoleColor(user.role)}">${user.avatar}</div>
-                    <div class="user-info">
-                        <div class="user-name">${user.name}</div>
-                        <div class="user-role role-${user.role}">${translations[currentLanguage][user.role] || user.role}</div>
-                    </div>
-                    <div class="online-status"></div>
-                `;
-                userList.appendChild(li);
+            files.forEach(file => {
+                // Create file URL for local preview
+                const fileUrl = URL.createObjectURL(file);
+                
+                // Convert file to base64 for sharing
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fileData = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: e.target.result,
+                        url: fileUrl
+                    };
+                    
+                    // Add to own chat
+                    addMessage(currentUser, `${translations[currentLanguage]['File shared']}: ${file.name}`, 'own', fileData);
+                    
+                    // Send to connected peers
+                    connections.forEach(conn => {
+                        conn.send({
+                            type: 'file',
+                            user: currentUser,
+                            file: fileData,
+                            timestamp: new Date().toISOString()
+                        });
+                    });
+                };
+                reader.readAsDataURL(file);
             });
             
-            onlineCount.textContent = `(${onlineUsers.length})`;
-            activeCount.textContent = onlineUsers.length;
+            event.target.value = '';
         }
 
-        // Message Management
-        function addMessage(messageData) {
-            messages.push(messageData);
-            renderMessage(messageData);
-            scrollToBottom();
-        }
-
-        function addSystemMessage(text) {
-            const systemMessage = {
-                id: Date.now(),
-                type: 'system',
-                content: text,
-                timestamp: new Date()
-            };
-            addMessage(systemMessage);
-        }
-
-        function renderMessage(messageData) {
-            if (messageData.type === 'system') {
-                const systemDiv = document.createElement('div');
-                systemDiv.style.cssText = `
-                    text-align: center;
-                    color: #7f8c8d;
-                    font-size: 13px;
-                    margin: 10px 0;
-                    font-style: italic;
-                `;
-                systemDiv.textContent = messageData.content;
-                chatContainer.appendChild(systemDiv);
-                return;
-            }
-
-            const messageDiv = document.createElement('div');
-            const isOwn = messageData.sender.name === currentUser?.name;
-            messageDiv.className = `message ${isOwn ? 'own' : messageData.sender.role}`;
+        function setupMessageInput() {
+            const messageInput = document.getElementById('messageInput');
             
-            let filesHTML = '';
-            if (messageData.files && messageData.files.length > 0) {
-                filesHTML = messageData.files.map(file => `
-                    <div class="file-preview">
-                        <div class="file-info">
-                            <div class="file-icon">${getFileIcon(file.type)}</div>
-                            <div class="file-details">
-                                <div class="file-name">${file.name}</div>
-                                <div class="file-size">${formatFileSize(file.size)}</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            
-            messageDiv.innerHTML = `
-                <div class="message-header">
-                    <div class="message-avatar" style="background: ${getRoleColor(messageData.sender.role)}">${messageData.sender.avatar}</div>
-                    <div class="message-info">
-                        <div class="message-sender">${messageData.sender.name}</div>
-                        <div class="message-time">${getTimeAgo(messageData.timestamp)}</div>
-                    </div>
-                </div>
-                <div class="message-content">${messageData.content}</div>
-                ${filesHTML}
-            `;
-            
-            chatContainer.appendChild(messageDiv);
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
         }
 
         function sendMessage() {
-            if (!isJoined) return;
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
             
-            const content = messageInput.value.trim();
-            const files = Array.from(fileInput.files);
-            
-            if (!content && files.length === 0) return;
-            
-            const messageData = {
-                id: Date.now(),
-                sender: currentUser,
-                content: content,
-                files: files.map(file => ({
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    url: URL.createObjectURL(file)
-                })),
-                timestamp: new Date()
-            };
-
-            addMessage(messageData);
-            
-            // Clear inputs
-            messageInput.value = '';
-            messageInput.style.height = 'auto';
-            fileInput.value = '';
-            
-            // Simulate typing from others occasionally
-            if (Math.random() < 0.4) {
-                setTimeout(() => simulateTyping(), 1000 + Math.random() * 3000);
+            if (message && connections.size > 0) {
+                const messageData = {
+                    type: 'message',
+                    user: currentUser,
+                    message: message,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Add to own chat
+                addMessage(currentUser, message, 'own');
+                
+                // Send to all connected peers
+                connections.forEach(conn => {
+                    conn.send(messageData);
+                });
+                
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+            } else if (connections.size === 0) {
+                addMessage('System', 'No one is connected. Share your Chat ID to start chatting!', 'system');
             }
         }
 
-        function simulateTeamMessages() {
-            if (!isJoined) return;
+        function addMessage(user, message, type, fileData = null) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
             
-            const teamMessages = [
-                { role: "manager", messages: [
-                    "Good morning team! Let's have a productive day.",
-                    "Please remember to update your shift reports.",
-                    "Great work on yesterday's sales numbers!",
-                    "Don't forget about the team meeting at 3 PM.",
-                    "I need the weekly inventory report by tomorrow."
-                ]},
-                { role: "supervisor", messages: [
-                    "The new shipment arrived this morning.",
-                    "Please prioritize customer service today.",
-                    "Stock levels look good in section A.",
-                    "Remember to follow the new safety protocols.",
-                    "Let me know if you need any assistance."
-                ]},
-                { role: "employee", messages: [
-                    "Just finished restocking the front displays.",
-                    "Customer asking about the return policy.",
-                    "Register 3 needs more receipt paper.",
-                    "Break room coffee machine is acting up again.",
-                    "Helped a customer find exactly what they needed!"
-                ]}
-            ];
-
-            // Simulate periodic messages
-            setInterval(() => {
-                if (Math.random() < 0.3 && onlineUsers.length > 1) {
-                    const activeUsers = onlineUsers.filter(user => user.name !== currentUser?.name);
-                    if (activeUsers.length > 0) {
-                        const randomUser = activeUsers[Math.floor(Math.random() * activeUsers.length)];
-                        const roleMessages = teamMessages.find(r => r.role === randomUser.role)?.messages || 
-                                           teamMessages[Math.floor(Math.random() * teamMessages.length)].messages;
-                        const randomMessage = roleMessages[Math.floor(Math.random() * roleMessages.length)];
-                        
-                        const messageData = {
-                            id: Date.now() + Math.random(),
-                            sender: randomUser,
-                            content: randomMessage,
-                            files: [],
-                            timestamp: new Date()
-                        };
-                        
-                        // Sometimes add files to messages
-                        if (Math.random() < 0.15) {
-                            const fileTypes = [
-                                { name: "inventory_report.xlsx", type: "application/vnd.ms-excel", size: 45320 },
-                                { name: "shift_schedule.pdf", type: "application/pdf", size: 128940 },
-                                { name: "sales_data.csv", type: "text/csv", size: 23100 },
-                                { name: "team_photo.jpg", type: "image/jpeg", size: 892340 },
-                                { name: "meeting_notes.docx", type: "application/msword", size: 67820 }
-                            ];
-                            messageData.files = [fileTypes[Math.floor(Math.random() * fileTypes.length)]];
-                        }
-                        
-                        addMessage(messageData);
-                    }
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const displayName = type === 'own' ? translations[currentLanguage]['You'] : user;
+            
+            let filePreview = '';
+            if (fileData) {
+                if (fileData.type.startsWith('image/')) {
+                    filePreview = `<div class="file-preview"><img src="${fileData.url || fileData.data}" alt="${fileData.name}"></div>`;
+                } else if (fileData.type.startsWith('video/')) {
+                    filePreview = `<div class="file-preview"><video controls src="${fileData.url || fileData.data}"></video></div>`;
+                } else {
+                    filePreview = `<div class="file-download" onclick="downloadFile('${fileData.data}', '${fileData.name}')">📎 ${fileData.name}</div>`;
                 }
-            }, 15000 + Math.random() * 30000);
-        }
-
-        function simulateTyping() {
-            const activeUsers = onlineUsers.filter(user => user.name !== currentUser?.name);
-            if (activeUsers.length === 0) return;
+            }
             
-            const typingUser = activeUsers[Math.floor(Math.random() * activeUsers.length)];
-            showTypingIndicator(typingUser);
-            
-            setTimeout(() => hideTypingIndicator(), 2000 + Math.random() * 3000);
-        }
-
-        function showTypingIndicator(user) {
-            hideTypingIndicator(); // Remove any existing indicator
-            
-            const indicator = document.createElement('div');
-            indicator.className = 'typing-indicator';
-            indicator.id = 'typingIndicator';
-            indicator.innerHTML = `
-                <div class="message-avatar" style="background: ${getRoleColor(user.role)}">${user.avatar}</div>
-                <div class="typing-text">${user.name} ${translations[currentLanguage].is_typing}</div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
+            messageEl.innerHTML = `
+                <div class="message-info">${type === 'system' ? '' : displayName + ' • ' + time}</div>
+                <div class="message-bubble">
+                    ${message}
+                    ${filePreview}
+                </div>
             `;
-            chatContainer.appendChild(indicator);
-            scrollToBottom();
-        }
-
-        function hideTypingIndicator() {
-            const indicator = document.getElementById('typingIndicator');
-            if (indicator) {
-                indicator.remove();
-            }
-        }
-
-        // Utility Functions
-        function getInitials(name) {
-            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        }
-
-        function getRoleColor(role) {
-            switch(role) {
-                case 'manager': return 'linear-gradient(45deg, #e74c3c, #c0392b)';
-                case 'supervisor': return 'linear-gradient(45deg, #f39c12, #e67e22)';
-                case 'employee': return 'linear-gradient(45deg, #2ecc71, #27ae60)';
-                default: return 'linear-gradient(45deg, #3498db, #2980b9)';
-            }
-        }
-
-        function getTimeAgo(timestamp) {
-            const now = new Date();
-            const diff = now - timestamp;
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(diff / 3600000);
             
-            if (minutes < 1) return translations[currentLanguage].now;
-            if (hours < 1) return `${minutes} ${translations[currentLanguage].minutes_ago}`;
-            return `${hours} ${translations[currentLanguage].hours_ago}`;
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function getFileIcon(fileType) {
-            if (fileType.startsWith('image/')) return '🖼️';
-            if (fileType.startsWith('video/')) return '🎥';
-            if (fileType.startsWith('audio/')) return '🎵';
-            if (fileType.includes('pdf')) return '📄';
-            if (fileType.includes('word') || fileType.includes('document')) return '📝';
-            if (fileType.includes('excel') || fileType.includes('spreadsheet')) return '📊';
-            if (fileType.includes('powerpoint') || fileType.includes('presentation')) return '📈';
-            return '📎';
+        function downloadFile(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        function scrollToBottom() {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // Event Listeners
-        sendButton.addEventListener('click', sendMessage);
-
-        messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        messageInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-        });
-
-        fileInput.addEventListener('change', function() {
-            if (this.files.length > 0) {
-                // Optional: Show file preview or indication
-                console.log('Files selected:', Array.from(this.files).map(f => f.name));
-            }
-        });
-
-        // Enter key for username input
-        usernameInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                joinChat();
-            }
-        });
-
-        // Focus username input on load
-        usernameInput.focus();
+        // Initialize with default language
+        changeLanguage('en');
     </script>
 </body>
 </html>
