@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Team Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-database-compat.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -35,6 +37,56 @@
             color: #333;
             margin-bottom: 30px;
             font-size: 2.5em;
+        }
+
+        .firebase-setup {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .firebase-setup h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .firebase-setup input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .firebase-setup button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .firebase-setup .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .firebase-setup .status.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .firebase-setup .status.error {
+            background: #ffcdd2;
+            color: #c62828;
         }
 
         .login-form input {
@@ -69,6 +121,12 @@
             transform: translateY(-2px);
         }
 
+        .login-form button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .chat-container {
             width: 90%;
             max-width: 900px;
@@ -95,6 +153,14 @@
             font-size: 16px;
             margin-top: 5px;
             opacity: 0.9;
+        }
+
+        .connection-status {
+            font-size: 14px;
+            margin-top: 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .chat-messages {
@@ -266,6 +332,29 @@
             display: none;
         }
 
+        .instructions {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -304,7 +393,30 @@
     <div class="login-container" id="loginContainer">
         <h1>💬 Team Chat</h1>
         
-        <form class="login-form" id="loginForm">
+        <!-- Firebase Setup Instructions -->
+        <div class="instructions">
+            <h4>🔥 One-time Firebase Setup (FREE):</h4>
+            <ol>
+                <li>Go to <strong>firebase.google.com</strong> → "Go to console"</li>
+                <li>Create new project (name it "store-chat")</li>
+                <li>Go to <strong>Realtime Database</strong> → Create database</li>
+                <li>Choose <strong>"Start in test mode"</strong></li>
+                <li>Copy the config below and paste here ⬇️</li>
+            </ol>
+        </div>
+
+        <!-- Firebase Configuration -->
+        <div class="firebase-setup" id="firebaseSetup">
+            <h3>🔧 Firebase Config:</h3>
+            <input type="text" id="apiKey" placeholder="API Key" />
+            <input type="text" id="databaseURL" placeholder="Database URL (ends with .firebaseio.com)" />
+            <input type="text" id="projectId" placeholder="Project ID" />
+            <button onclick="connectFirebase()">Connect</button>
+            <button onclick="useDemo()">Use Demo (Limited)</button>
+            <div id="connectionStatus" class="status" style="display: none;"></div>
+        </div>
+        
+        <form class="login-form" id="loginForm" style="display: none;">
             <input 
                 type="text" 
                 id="nameInput" 
@@ -321,8 +433,9 @@
         <div class="chat-header">
             <div>Store Team Chat</div>
             <div class="online-info" id="onlineInfo">
-                <span id="userCount">1</span> person online
+                <span id="userCount">0</span> people online
             </div>
+            <div class="connection-status" id="chatConnectionStatus">Connected</div>
         </div>
 
         <div class="chat-messages" id="chatMessages"></div>
@@ -351,15 +464,107 @@
 
     <script>
         let currentUser = '';
-        let users = new Set();
-        let messages = [];
-        
+        let database = null;
+        let messagesRef = null;
+        let usersRef = null;
+        let isConnected = false;
+
+        // Demo Firebase config (limited usage)
+        const demoConfig = {
+            apiKey: "AIzaSyBqnLYz8xM2zDpvBGsJuJKkP-xGJDq_i8k",
+            databaseURL: "https://demo-chat-9c8fd-default-rtdb.firebaseio.com/",
+            projectId: "demo-chat-9c8fd"
+        };
+
+        function useDemo() {
+            document.getElementById('apiKey').value = demoConfig.apiKey;
+            document.getElementById('databaseURL').value = demoConfig.databaseURL;
+            document.getElementById('projectId').value = demoConfig.projectId;
+            connectFirebase();
+        }
+
+        function connectFirebase() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const databaseURL = document.getElementById('databaseURL').value.trim();
+            const projectId = document.getElementById('projectId').value.trim();
+
+            if (!apiKey || !databaseURL || !projectId) {
+                showStatus('Please fill in all Firebase config fields', 'error');
+                return;
+            }
+
+            try {
+                const firebaseConfig = {
+                    apiKey: apiKey,
+                    databaseURL: databaseURL,
+                    projectId: projectId
+                };
+
+                // Initialize Firebase
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+
+                // Test connection
+                database.ref('.info/connected').on('value', (snapshot) => {
+                    isConnected = snapshot.val();
+                    updateConnectionStatus();
+                });
+
+                messagesRef = database.ref('messages');
+                usersRef = database.ref('users');
+
+                showStatus('Connected to Firebase! 🎉', 'success');
+                
+                // Show login form
+                document.getElementById('firebaseSetup').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+
+                setupFirebaseListeners();
+
+            } catch (error) {
+                console.error('Firebase connection error:', error);
+                showStatus('Connection failed: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('connectionStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function updateConnectionStatus() {
+            const statusEl = document.getElementById('chatConnectionStatus');
+            if (statusEl) {
+                statusEl.textContent = isConnected ? '🟢 Connected' : '🔴 Disconnected';
+            }
+        }
+
+        function setupFirebaseListeners() {
+            // Listen for new messages
+            messagesRef.limitToLast(50).on('child_added', (snapshot) => {
+                const messageData = snapshot.val();
+                if (messageData && messageData.user !== currentUser) {
+                    displayMessage(messageData.user, messageData.message, 'other', messageData.fileData);
+                }
+            });
+
+            // Listen for users
+            usersRef.on('value', (snapshot) => {
+                const users = snapshot.val() || {};
+                const userCount = Object.keys(users).length;
+                const plural = userCount === 1 ? 'person' : 'people';
+                document.getElementById('onlineInfo').innerHTML = `<span id="userCount">${userCount}</span> ${plural} online`;
+            });
+        }
+
         // Login handling
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('nameInput').value.trim();
             
-            if (name && name.length >= 2) {
+            if (name && name.length >= 2 && database) {
                 currentUser = name;
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('chatContainer').style.display = 'flex';
@@ -369,41 +574,44 @@
         });
 
         function initializeChat() {
-            loadMessages();
-            addUser(currentUser);
-            addMessage('System', `${currentUser} joined the chat`, 'system');
+            // Add user to online users
+            const userKey = currentUser.replace(/[.#$[\]]/g, '_');
+            usersRef.child(userKey).set({
+                name: currentUser,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Remove user when they leave
+            usersRef.child(userKey).onDisconnect().remove();
+
+            // Send join message
+            sendSystemMessage(`${currentUser} joined the chat`);
             
             setupFileHandling();
             setupMessageInput();
-            
-            // Chat is ready for real people only
+
+            // Load recent messages
+            loadRecentMessages();
         }
 
-        function loadMessages() {
-            const saved = localStorage.getItem('store_chat_messages');
-            if (saved) {
-                messages = JSON.parse(saved);
-                messages.slice(-30).forEach(msg => {
-                    displayMessage(msg.user, msg.message, msg.user === currentUser ? 'own' : 'other', msg.fileData, false);
+        function loadRecentMessages() {
+            messagesRef.limitToLast(20).once('value', (snapshot) => {
+                const messages = snapshot.val() || {};
+                Object.values(messages).forEach(messageData => {
+                    if (messageData.user !== currentUser) {
+                        displayMessage(messageData.user, messageData.message, 'other', messageData.fileData, false);
+                    }
                 });
-            }
+            });
         }
 
-        function saveMessages() {
-            localStorage.setItem('store_chat_messages', JSON.stringify(messages.slice(-50)));
-        }
-
-        function addUser(userName) {
-            if (!users.has(userName)) {
-                users.add(userName);
-                updateUserCount();
-            }
-        }
-
-        function updateUserCount() {
-            const count = users.size;
-            const plural = count === 1 ? 'person' : 'people';
-            document.getElementById('onlineInfo').innerHTML = `<span id="userCount">${count}</span> ${plural} online`;
+        function sendSystemMessage(message) {
+            messagesRef.push({
+                user: 'System',
+                message: message,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                type: 'system'
+            });
         }
 
         function setupFileHandling() {
@@ -433,19 +641,22 @@
             const files = Array.from(event.target.files);
             
             files.forEach(file => {
-                const fileUrl = URL.createObjectURL(file);
-                
+                if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                    alert('File too large! Max 5MB per file.');
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const fileData = {
                         name: file.name,
                         type: file.type,
                         size: file.size,
-                        data: e.target.result,
-                        url: fileUrl
+                        data: e.target.result
                     };
                     
-                    addMessage(currentUser, `📎 Shared: ${file.name}`, 'own', fileData);
+                    const message = `📎 Shared: ${file.name}`;
+                    sendMessage(message, fileData);
                 };
                 reader.readAsDataURL(file);
             });
@@ -469,31 +680,29 @@
             });
         }
 
-        function sendMessage() {
+        function sendMessage(customMessage = null, fileData = null) {
             const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
+            const message = customMessage || messageInput.value.trim();
             
-            if (message) {
-                addMessage(currentUser, message, 'own');
-                messageInput.value = '';
-                messageInput.style.height = 'auto';
-                
-                // Real people only - no fake responses!
-            }
-        }
+            if (message && isConnected) {
+                // Add to Firebase
+                messagesRef.push({
+                    user: currentUser,
+                    message: message,
+                    fileData: fileData,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
 
-        function addMessage(user, message, type, fileData = null) {
-            const messageData = {
-                user,
-                message,
-                type,
-                fileData,
-                timestamp: Date.now()
-            };
-            
-            messages.push(messageData);
-            displayMessage(user, message, type, fileData);
-            saveMessages();
+                // Display locally
+                displayMessage(currentUser, message, 'own', fileData);
+                
+                if (!customMessage) {
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                }
+            } else if (!isConnected) {
+                alert('Not connected to chat server!');
+            }
         }
 
         function displayMessage(user, message, type, fileData = null, animate = true) {
@@ -508,16 +717,16 @@
             let filePreview = '';
             if (fileData) {
                 if (fileData.type.startsWith('image/')) {
-                    filePreview = `<div class="file-preview"><img src="${fileData.url || fileData.data}" alt="${fileData.name}"></div>`;
+                    filePreview = `<div class="file-preview"><img src="${fileData.data}" alt="${fileData.name}"></div>`;
                 } else if (fileData.type.startsWith('video/')) {
-                    filePreview = `<div class="file-preview"><video controls src="${fileData.url || fileData.data}"></video></div>`;
+                    filePreview = `<div class="file-preview"><video controls src="${fileData.data}"></video></div>`;
                 } else {
                     filePreview = `<div class="file-download" onclick="downloadFile('${fileData.data}', '${fileData.name}')">📎 ${fileData.name} (${formatFileSize(fileData.size)})</div>`;
                 }
             }
             
             messageEl.innerHTML = `
-                <div class="message-info">${type === 'system' ? '' : displayName + ' • ' + time}</div>
+                <div class="message-info">${user === 'System' ? '' : displayName + ' • ' + time}</div>
                 <div class="message-bubble">
                     ${message}
                     ${filePreview}
