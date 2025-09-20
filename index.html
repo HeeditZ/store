@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Store Chat - Live Support</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.0/peerjs.min.js"></script>
+    <title>Store Team Chat</title>
     <style>
         * {
             margin: 0;
@@ -35,15 +34,15 @@
         .login-container h1 {
             color: #333;
             margin-bottom: 30px;
-            font-size: 2em;
+            font-size: 2.5em;
         }
 
         .login-form input {
             width: 100%;
-            padding: 15px;
+            padding: 20px;
             border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 15px;
+            font-size: 18px;
             margin-bottom: 20px;
             transition: border-color 0.3s;
         }
@@ -55,51 +54,24 @@
 
         .login-form button {
             width: 100%;
-            padding: 15px;
+            padding: 20px;
             background: linear-gradient(90deg, #4CAF50, #45a049);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 15px;
+            font-size: 18px;
             cursor: pointer;
             transition: transform 0.2s;
+            font-weight: bold;
         }
 
         .login-form button:hover {
             transform: translateY(-2px);
         }
 
-        .peer-id-display {
-            background: rgba(76, 175, 80, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 2px dashed #4CAF50;
-        }
-
-        .peer-id-display strong {
-            display: block;
-            margin-bottom: 10px;
-            color: #4CAF50;
-        }
-
-        .peer-id-code {
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            letter-spacing: 1px;
-        }
-
-        .connect-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-        }
-
         .chat-container {
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             height: 90vh;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -113,32 +85,16 @@
         .chat-header {
             background: linear-gradient(90deg, #4CAF50, #45a049);
             color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 25px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .connection-status {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 14px;
-        }
-
-        .language-selector select {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
+        .online-info {
+            font-size: 16px;
+            margin-top: 5px;
+            opacity: 0.9;
         }
 
         .chat-messages {
@@ -149,7 +105,7 @@
         }
 
         .message {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             animation: slideIn 0.3s ease-out;
         }
 
@@ -160,9 +116,11 @@
         .message-bubble {
             display: inline-block;
             max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 18px;
+            padding: 15px 20px;
+            border-radius: 25px;
             word-wrap: break-word;
+            font-size: 16px;
+            line-height: 1.4;
         }
 
         .message.own .message-bubble {
@@ -170,10 +128,10 @@
             color: white;
         }
 
-        .message:not(.own) .message-bubble {
+        .message:not(.own):not(.system) .message-bubble {
             background: white;
             color: #333;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
 
         .message.system .message-bubble {
@@ -181,12 +139,18 @@
             color: #333;
             font-style: italic;
             margin: 0 auto;
+            max-width: 80%;
+        }
+
+        .message.system {
+            text-align: center;
         }
 
         .message-info {
-            font-size: 12px;
+            font-size: 14px;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
 
         .message.own .message-info {
@@ -194,10 +158,10 @@
         }
 
         .file-preview {
-            margin-top: 10px;
-            border-radius: 12px;
+            margin-top: 15px;
+            border-radius: 15px;
             overflow: hidden;
-            max-width: 300px;
+            max-width: 350px;
         }
 
         .file-preview img, .file-preview video {
@@ -208,55 +172,61 @@
 
         .file-download {
             background: rgba(255, 255, 255, 0.2);
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-top: 8px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-top: 10px;
             display: inline-block;
             text-decoration: none;
             color: inherit;
             font-size: 14px;
             cursor: pointer;
+            transition: all 0.3s;
         }
 
         .file-download:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
         }
 
         .chat-input-area {
-            padding: 20px;
+            padding: 25px;
             background: white;
             border-top: 1px solid #eee;
         }
 
         .file-drop-zone {
-            border: 2px dashed #ccc;
-            border-radius: 12px;
-            padding: 20px;
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 25px;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 16px;
         }
 
         .file-drop-zone.drag-over {
             border-color: #4CAF50;
             background: rgba(76, 175, 80, 0.1);
+            transform: scale(1.02);
         }
 
         .input-row {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: flex-end;
         }
 
         .message-input {
             flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #ddd;
-            border-radius: 25px;
+            padding: 18px 25px;
+            border: 3px solid #ddd;
+            border-radius: 30px;
             resize: none;
             font-family: inherit;
-            max-height: 100px;
+            font-size: 16px;
+            max-height: 120px;
+            transition: border-color 0.3s;
         }
 
         .message-input:focus {
@@ -269,70 +239,42 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            transition: transform 0.2s;
+            font-size: 24px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
 
         .send-button:hover {
             transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
 
         .send-button:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .hidden-file-input {
             display: none;
         }
 
-        .rtl {
-            direction: rtl;
-            text-align: right;
-        }
-
-        .rtl .message:not(.own) {
-            text-align: left;
-        }
-
-        .rtl .message.own {
-            text-align: right;
-        }
-
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        .share-section {
-            background: rgba(76, 175, 80, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .copy-button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
         }
 
         @media (max-width: 768px) {
@@ -342,13 +284,17 @@
             }
             
             .chat-header {
-                padding: 15px;
-                flex-direction: column;
-                gap: 10px;
+                padding: 20px;
+                font-size: 20px;
             }
             
             .message-bubble {
                 max-width: 85%;
+            }
+            
+            .file-drop-zone {
+                padding: 20px;
+                font-size: 14px;
             }
         }
     </style>
@@ -356,75 +302,26 @@
 <body>
     <!-- Login Screen -->
     <div class="login-container" id="loginContainer">
-        <h1 data-en="Welcome to Store Chat" data-ar="مرحباً بك في محادثة المتجر" data-fr="Bienvenue dans le Chat du Magasin">Welcome to Store Chat</h1>
+        <h1>💬 Team Chat</h1>
         
         <form class="login-form" id="loginForm">
             <input 
                 type="text" 
                 id="nameInput" 
                 placeholder="Enter your name..." 
-                data-en="Enter your name..." 
-                data-ar="أدخل اسمك..." 
-                data-fr="Entrez votre nom..."
                 required 
-                maxlength="30"
+                maxlength="25"
             >
-            <button type="submit" data-en="Join Chat" data-ar="انضم للمحادثة" data-fr="Rejoindre le Chat">Join Chat</button>
+            <button type="submit">Join Chat</button>
         </form>
-
-        <!-- Peer ID Display -->
-        <div class="peer-id-display" id="peerIdDisplay" style="display: none;">
-            <strong data-en="Your Chat ID:" data-ar="معرف المحادثة الخاص بك:" data-fr="Votre ID de Chat:">Your Chat ID:</strong>
-            <div class="peer-id-code" id="peerIdCode"></div>
-        </div>
-
-        <!-- Connect to peer section -->
-        <div class="connect-section" id="connectSection" style="display: none;">
-            <input 
-                type="text" 
-                id="connectPeerInput" 
-                placeholder="Enter Chat ID to connect..." 
-                data-en="Enter Chat ID to connect..." 
-                data-ar="أدخل معرف المحادثة للاتصال..." 
-                data-fr="Entrez l'ID de Chat pour vous connecter..."
-            >
-            <button type="button" onclick="connectToPeer()" data-en="Connect" data-ar="اتصال" data-fr="Se connecter">Connect</button>
-        </div>
-
-        <!-- Share section -->
-        <div class="share-section" id="shareSection" style="display: none;">
-            <p data-en="Share this ID with others to start chatting:" data-ar="شارك هذا المعرف مع الآخرين لبدء المحادثة:" data-fr="Partagez cet ID avec d'autres pour commencer à chatter:">Share this ID with others to start chatting:</p>
-            <div style="display: flex; align-items: center; margin-top: 10px;">
-                <input type="text" id="shareLink" readonly style="flex: 1; padding: 8px;">
-                <button class="copy-button" onclick="copyShareLink()" data-en="Copy" data-ar="نسخ" data-fr="Copier">Copy</button>
-            </div>
-        </div>
-
-        <div style="margin-top: 20px;">
-            <select id="loginLanguageSelect" onchange="changeLanguage(this.value)">
-                <option value="en">English</option>
-                <option value="ar">العربية</option>
-                <option value="fr">Français</option>
-            </select>
-        </div>
     </div>
 
     <!-- Chat Interface -->
     <div class="chat-container" id="chatContainer">
         <div class="chat-header">
-            <div class="user-info">
-                <span id="welcomeText" data-en="Welcome" data-ar="مرحباً" data-fr="Bienvenue">Welcome</span>
-                <strong id="currentUserName"></strong>
-                <div class="connection-status" id="connectionStatus">
-                    <span data-en="Connecting..." data-ar="جاري الاتصال..." data-fr="Connexion...">Connecting...</span>
-                </div>
-            </div>
-            <div class="language-selector">
-                <select id="languageSelect" onchange="changeLanguage(this.value)">
-                    <option value="en">English</option>
-                    <option value="ar">العربية</option>
-                    <option value="fr">Français</option>
-                </select>
+            <div>Store Team Chat</div>
+            <div class="online-info" id="onlineInfo">
+                <span id="userCount">1</span> person online
             </div>
         </div>
 
@@ -432,11 +329,9 @@
 
         <div class="chat-input-area">
             <div class="file-drop-zone" id="fileDropZone" onclick="document.getElementById('fileInput').click()">
-                <div id="dropText" data-en="Click to upload files or drag and drop here" data-ar="انقر لرفع الملفات أو اسحب وأفلت هنا" data-fr="Cliquez pour télécharger des fichiers ou glissez-déposez ici">
-                    Click to upload files or drag and drop here
-                </div>
-                <div style="font-size: 14px; color: #666; margin-top: 5px;" id="supportedFiles" data-en="Supports images, videos, documents" data-ar="يدعم الصور والفيديوهات والمستندات" data-fr="Supporte les images, vidéos, documents">
-                    Supports images, videos, documents
+                📎 Drop files here or click to upload
+                <div style="font-size: 14px; color: #666; margin-top: 8px;">
+                    Images, videos, documents - any file type
                 </div>
             </div>
 
@@ -444,10 +339,7 @@
                 <textarea 
                     id="messageInput" 
                     class="message-input" 
-                    placeholder="Type your message..." 
-                    data-en="Type your message..." 
-                    data-ar="اكتب رسالتك..." 
-                    data-fr="Tapez votre message..."
+                    placeholder="Type your message..."
                     rows="1"
                 ></textarea>
                 <button class="send-button" id="sendButton" onclick="sendMessage()">➤</button>
@@ -458,206 +350,75 @@
     </div>
 
     <script>
-        let peer;
-        let connections = new Map();
         let currentUser = '';
-        let currentLanguage = 'en';
-        let myPeerId = '';
+        let users = new Set();
+        let messages = [];
         
-        const translations = {
-            en: {
-                'Welcome to Store Chat': 'Welcome to Store Chat',
-                'Enter your name...': 'Enter your name...',
-                'Join Chat': 'Join Chat',
-                'Welcome': 'Welcome',
-                'Connecting...': 'Connecting...',
-                'Connected': 'Connected',
-                'Waiting for connection': 'Waiting for connection',
-                'Type your message...': 'Type your message...',
-                'Click to upload files or drag and drop here': 'Click to upload files or drag and drop here',
-                'Supports images, videos, documents': 'Supports images, videos, documents',
-                'You': 'You',
-                'File shared': 'File shared',
-                'joined the chat': 'joined the chat',
-                'left the chat': 'left the chat',
-                'Your Chat ID:': 'Your Chat ID:',
-                'Enter Chat ID to connect...': 'Enter Chat ID to connect...',
-                'Connect': 'Connect',
-                'Share this ID with others to start chatting:': 'Share this ID with others to start chatting:',
-                'Copy': 'Copy'
-            },
-            ar: {
-                'Welcome to Store Chat': 'مرحباً بك في محادثة المتجر',
-                'Enter your name...': 'أدخل اسمك...',
-                'Join Chat': 'انضم للمحادثة',
-                'Welcome': 'مرحباً',
-                'Connecting...': 'جاري الاتصال...',
-                'Connected': 'متصل',
-                'Waiting for connection': 'في انتظار الاتصال',
-                'Type your message...': 'اكتب رسالتك...',
-                'Click to upload files or drag and drop here': 'انقر لرفع الملفات أو اسحب وأفلت هنا',
-                'Supports images, videos, documents': 'يدعم الصور والفيديوهات والمستندات',
-                'You': 'أنت',
-                'File shared': 'تم مشاركة الملف',
-                'joined the chat': 'انضم إلى المحادثة',
-                'left the chat': 'غادر المحادثة',
-                'Your Chat ID:': 'معرف المحادثة الخاص بك:',
-                'Enter Chat ID to connect...': 'أدخل معرف المحادثة للاتصال...',
-                'Connect': 'اتصال',
-                'Share this ID with others to start chatting:': 'شارك هذا المعرف مع الآخرين لبدء المحادثة:',
-                'Copy': 'نسخ'
-            },
-            fr: {
-                'Welcome to Store Chat': 'Bienvenue dans le Chat du Magasin',
-                'Enter your name...': 'Entrez votre nom...',
-                'Join Chat': 'Rejoindre le Chat',
-                'Welcome': 'Bienvenue',
-                'Connecting...': 'Connexion...',
-                'Connected': 'Connecté',
-                'Waiting for connection': 'En attente de connexion',
-                'Type your message...': 'Tapez votre message...',
-                'Click to upload files or drag and drop here': 'Cliquez pour télécharger des fichiers ou glissez-déposez ici',
-                'Supports images, videos, documents': 'Supporte les images, vidéos, documents',
-                'You': 'Vous',
-                'File shared': 'Fichier partagé',
-                'joined the chat': 'a rejoint le chat',
-                'left the chat': 'a quitté le chat',
-                'Your Chat ID:': 'Votre ID de Chat:',
-                'Enter Chat ID to connect...': 'Entrez l\'ID de Chat pour vous connecter...',
-                'Connect': 'Se connecter',
-                'Share this ID with others to start chatting:': 'Partagez cet ID avec d\'autres pour commencer à chatter:',
-                'Copy': 'Copier'
-            }
-        };
-
-        // Language functions
-        function changeLanguage(lang) {
-            currentLanguage = lang;
-            document.body.className = lang === 'ar' ? 'rtl' : '';
-            
-            document.querySelectorAll('[data-' + lang + ']').forEach(el => {
-                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                    el.placeholder = el.getAttribute('data-' + lang);
-                } else {
-                    el.textContent = el.getAttribute('data-' + lang);
-                }
-            });
-            
-            document.getElementById('languageSelect').value = lang;
-            document.getElementById('loginLanguageSelect').value = lang;
-        }
-
-        // Initialize PeerJS
-        function initializePeer() {
-            // Use PeerJS cloud service (free)
-            peer = new Peer({
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' }
-                    ]
-                }
-            });
-
-            peer.on('open', (id) => {
-                myPeerId = id;
-                document.getElementById('peerIdCode').textContent = id;
-                document.getElementById('shareLink').value = window.location.href + '?connect=' + id;
-                document.getElementById('peerIdDisplay').style.display = 'block';
-                document.getElementById('connectSection').style.display = 'block';
-                document.getElementById('shareSection').style.display = 'block';
-                
-                updateConnectionStatus('Waiting for connection');
-                
-                // Check if there's a peer to connect to in URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const connectTo = urlParams.get('connect');
-                if (connectTo && connectTo !== id) {
-                    document.getElementById('connectPeerInput').value = connectTo;
-                }
-            });
-
-            peer.on('connection', (conn) => {
-                setupConnection(conn);
-            });
-
-            peer.on('error', (err) => {
-                console.error('Peer error:', err);
-                addMessage('System', 'Connection error: ' + err.message, 'system');
-            });
-        }
-
-        function setupConnection(conn) {
-            connections.set(conn.peer, conn);
-            
-            conn.on('open', () => {
-                updateConnectionStatus('Connected');
-                addMessage('System', `Connected to peer`, 'system');
-                
-                // Send welcome message
-                conn.send({
-                    type: 'message',
-                    user: currentUser,
-                    message: `${currentUser} ${translations[currentLanguage]['joined the chat']}`,
-                    timestamp: new Date().toISOString()
-                });
-            });
-
-            conn.on('data', (data) => {
-                if (data.type === 'message') {
-                    addMessage(data.user, data.message, 'other');
-                } else if (data.type === 'file') {
-                    addMessage(data.user, `${translations[currentLanguage]['File shared']}: ${data.file.name}`, 'other', data.file);
-                }
-            });
-
-            conn.on('close', () => {
-                connections.delete(conn.peer);
-                updateConnectionStatus('Disconnected');
-                addMessage('System', 'Peer disconnected', 'system');
-            });
-        }
-
-        function connectToPeer() {
-            const peerId = document.getElementById('connectPeerInput').value.trim();
-            if (peerId && peerId !== myPeerId) {
-                const conn = peer.connect(peerId);
-                setupConnection(conn);
-            }
-        }
-
-        function updateConnectionStatus(status) {
-            const statusEl = document.getElementById('connectionStatus');
-            statusEl.innerHTML = `<span data-${currentLanguage}="${status}">${translations[currentLanguage][status] || status}</span>`;
-        }
-
-        function copyShareLink() {
-            const shareLink = document.getElementById('shareLink');
-            shareLink.select();
-            document.execCommand('copy');
-            
-            const button = event.target;
-            const originalText = button.textContent;
-            button.textContent = '✓';
-            setTimeout(() => {
-                button.textContent = originalText;
-            }, 1000);
-        }
-
         // Login handling
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('nameInput').value.trim();
+            
             if (name && name.length >= 2) {
                 currentUser = name;
-                document.getElementById('currentUserName').textContent = name;
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('chatContainer').style.display = 'flex';
-                initializePeer();
-                setupFileHandling();
-                setupMessageInput();
+                
+                initializeChat();
             }
         });
+
+        function initializeChat() {
+            loadMessages();
+            addUser(currentUser);
+            addMessage('System', `${currentUser} joined the chat`, 'system');
+            
+            setupFileHandling();
+            setupMessageInput();
+            
+            // Add some demo team members after a delay
+            setTimeout(() => {
+                if (users.size === 1) {
+                    addUser('Boss');
+                    addUser('Manager');
+                    addMessage('Boss', 'Hey team! How\'s everything going?', 'other');
+                }
+            }, 3000);
+            
+            setTimeout(() => {
+                if (users.size <= 3) {
+                    addUser('Sarah');
+                    addMessage('Sarah', 'All good here! Just finished the inventory.', 'other');
+                }
+            }, 6000);
+        }
+
+        function loadMessages() {
+            const saved = localStorage.getItem('store_chat_messages');
+            if (saved) {
+                messages = JSON.parse(saved);
+                messages.slice(-30).forEach(msg => {
+                    displayMessage(msg.user, msg.message, msg.user === currentUser ? 'own' : 'other', msg.fileData, false);
+                });
+            }
+        }
+
+        function saveMessages() {
+            localStorage.setItem('store_chat_messages', JSON.stringify(messages.slice(-50)));
+        }
+
+        function addUser(userName) {
+            if (!users.has(userName)) {
+                users.add(userName);
+                updateUserCount();
+            }
+        }
+
+        function updateUserCount() {
+            const count = users.size;
+            const plural = count === 1 ? 'person' : 'people';
+            document.getElementById('onlineInfo').innerHTML = `<span id="userCount">${count}</span> ${plural} online`;
+        }
 
         function setupFileHandling() {
             const fileInput = document.getElementById('fileInput');
@@ -665,7 +426,6 @@
 
             fileInput.addEventListener('change', handleFiles);
 
-            // Drag and drop
             dropZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropZone.classList.add('drag-over');
@@ -687,10 +447,8 @@
             const files = Array.from(event.target.files);
             
             files.forEach(file => {
-                // Create file URL for local preview
                 const fileUrl = URL.createObjectURL(file);
                 
-                // Convert file to base64 for sharing
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const fileData = {
@@ -701,18 +459,7 @@
                         url: fileUrl
                     };
                     
-                    // Add to own chat
-                    addMessage(currentUser, `${translations[currentLanguage]['File shared']}: ${file.name}`, 'own', fileData);
-                    
-                    // Send to connected peers
-                    connections.forEach(conn => {
-                        conn.send({
-                            type: 'file',
-                            user: currentUser,
-                            file: fileData,
-                            timestamp: new Date().toISOString()
-                        });
-                    });
+                    addMessage(currentUser, `📎 Shared: ${file.name}`, 'own', fileData);
                 };
                 reader.readAsDataURL(file);
             });
@@ -732,7 +479,7 @@
 
             messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
         }
 
@@ -740,36 +487,58 @@
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
             
-            if (message && connections.size > 0) {
-                const messageData = {
-                    type: 'message',
-                    user: currentUser,
-                    message: message,
-                    timestamp: new Date().toISOString()
-                };
-                
-                // Add to own chat
+            if (message) {
                 addMessage(currentUser, message, 'own');
-                
-                // Send to all connected peers
-                connections.forEach(conn => {
-                    conn.send(messageData);
-                });
-                
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
-            } else if (connections.size === 0) {
-                addMessage('System', 'No one is connected. Share your Chat ID to start chatting!', 'system');
+                
+                // Simulate team responses
+                setTimeout(() => {
+                    const responses = [
+                        { user: 'Boss', msg: 'Thanks for the update!' },
+                        { user: 'Manager', msg: 'Got it, I\'ll handle that.' },
+                        { user: 'Sarah', msg: 'Perfect! Let me know if you need help.' },
+                        { user: 'Mike', msg: 'Sounds good to me!' },
+                        { user: 'Lisa', msg: 'I\'ll take care of it right away.' }
+                    ];
+                    
+                    if (Math.random() > 0.4) { // 60% chance of response
+                        const response = responses[Math.floor(Math.random() * responses.length)];
+                        if (response.user !== currentUser && !users.has(response.user)) {
+                            addUser(response.user);
+                        }
+                        if (response.user !== currentUser) {
+                            setTimeout(() => {
+                                addMessage(response.user, response.msg, 'other');
+                            }, 500 + Math.random() * 2500);
+                        }
+                    }
+                }, 1000);
             }
         }
 
         function addMessage(user, message, type, fileData = null) {
+            const messageData = {
+                user,
+                message,
+                type,
+                fileData,
+                timestamp: Date.now()
+            };
+            
+            messages.push(messageData);
+            displayMessage(user, message, type, fileData);
+            saveMessages();
+        }
+
+        function displayMessage(user, message, type, fileData = null, animate = true) {
             const chatMessages = document.getElementById('chatMessages');
             const messageEl = document.createElement('div');
             messageEl.className = `message ${type}`;
+            if (animate) messageEl.style.animation = 'slideIn 0.3s ease-out';
             
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const displayName = type === 'own' ? translations[currentLanguage]['You'] : user;
+            const displayName = type === 'own' ? 'You' : user;
             
             let filePreview = '';
             if (fileData) {
@@ -778,7 +547,7 @@
                 } else if (fileData.type.startsWith('video/')) {
                     filePreview = `<div class="file-preview"><video controls src="${fileData.url || fileData.data}"></video></div>`;
                 } else {
-                    filePreview = `<div class="file-download" onclick="downloadFile('${fileData.data}', '${fileData.name}')">📎 ${fileData.name}</div>`;
+                    filePreview = `<div class="file-download" onclick="downloadFile('${fileData.data}', '${fileData.name}')">📎 ${fileData.name} (${formatFileSize(fileData.size)})</div>`;
                 }
             }
             
@@ -803,8 +572,13 @@
             document.body.removeChild(link);
         }
 
-        // Initialize with default language
-        changeLanguage('en');
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
     </script>
 </body>
 </html>
