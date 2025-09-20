@@ -376,21 +376,7 @@
             setupFileHandling();
             setupMessageInput();
             
-            // Add some demo team members after a delay
-            setTimeout(() => {
-                if (users.size === 1) {
-                    addUser('Boss');
-                    addUser('Manager');
-                    addMessage('Boss', 'Hey team! How\'s everything going?', 'other');
-                }
-            }, 3000);
-            
-            setTimeout(() => {
-                if (users.size <= 3) {
-                    addUser('Sarah');
-                    addMessage('Sarah', 'All good here! Just finished the inventory.', 'other');
-                }
-            }, 6000);
+            // Chat is ready for real people only
         }
 
         function loadMessages() {
@@ -492,28 +478,7 @@
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
                 
-                // Simulate team responses
-                setTimeout(() => {
-                    const responses = [
-                        { user: 'Boss', msg: 'Thanks for the update!' },
-                        { user: 'Manager', msg: 'Got it, I\'ll handle that.' },
-                        { user: 'Sarah', msg: 'Perfect! Let me know if you need help.' },
-                        { user: 'Mike', msg: 'Sounds good to me!' },
-                        { user: 'Lisa', msg: 'I\'ll take care of it right away.' }
-                    ];
-                    
-                    if (Math.random() > 0.4) { // 60% chance of response
-                        const response = responses[Math.floor(Math.random() * responses.length)];
-                        if (response.user !== currentUser && !users.has(response.user)) {
-                            addUser(response.user);
-                        }
-                        if (response.user !== currentUser) {
-                            setTimeout(() => {
-                                addMessage(response.user, response.msg, 'other');
-                            }, 500 + Math.random() * 2500);
-                        }
-                    }
-                }, 1000);
+                // Real people only - no fake responses!
             }
         }
 
