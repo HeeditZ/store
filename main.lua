@@ -1097,7 +1097,7 @@ local function playLoading(onComplete)
         ColorSequenceKeypoint.new(0.5, Color3.new(1, 1, 1)),
         ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 240, 255)),
     })
-    titleGrad.Offset = Vector2.new(-1, 0)
+    titleGrad.Offset = Vector2.new(-1, 0) -- hi
     titleGrad.Parent = title
 
     local sub = Instance.new("TextLabel")
