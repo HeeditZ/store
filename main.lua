@@ -1,34 +1,33 @@
 --[[\
-    Muye-Hub UI Library v1.0
+    Muye-Hub UI Library v1.1 (True Glassmorphic Edition)
     Novoline-Tier Architecture & Animation System
 --]]
 
 local userInputService = game:GetService("UserInputService")
 local tweenService     = game:GetService("TweenService")
-local runService       = game:GetService("RunService")
 local players          = game:GetService("Players")
 local coreGui          = game:GetService("CoreGui")
 local localPlayer      = players.LocalPlayer
 
 local MuyeHub = {}
 
--- Design System Colors
+-- Design System Colors (High Contrast & Crisp)
 local C = {
-    TEXT    = Color3.fromRGB(242, 242, 244),
-    SUBTLE  = Color3.fromRGB(150, 150, 156),
-    INK     = Color3.fromRGB(18, 18, 20),
+    TEXT    = Color3.fromRGB(255, 255, 255),
+    SUBTLE  = Color3.fromRGB(170, 170, 178),
+    INK     = Color3.fromRGB(24, 24, 30),
     WHITE   = Color3.new(1, 1, 1),
-    OFF     = Color3.fromRGB(58, 58, 62),
+    OFF     = Color3.fromRGB(65, 65, 72),
 }
 
--- Tint Pairs (Dark Background, Accent Color)[cite: 1]
+-- Tint Pairs (Glass Tint, Accent Glow)[cite: 1]
 local TINTS = {
-    blue   = { Color3.fromRGB(13,  40,  51), Color3.fromRGB(64,  186, 255) },
-    purple = { Color3.fromRGB(38,  28,  62), Color3.fromRGB(168, 120, 255) },
-    teal   = { Color3.fromRGB(14,  46,  40), Color3.fromRGB(56,  224, 186) },
-    orange = { Color3.fromRGB(62,  36,  16), Color3.fromRGB(255, 150, 50)  },
-    red    = { Color3.fromRGB(62,  20,  24), Color3.fromRGB(255, 96,  96)  },
-    yellow = { Color3.fromRGB(56,  46,  12), Color3.fromRGB(245, 197, 66)  },
+    blue   = { Color3.fromRGB(20,  50,  70), Color3.fromRGB(64,  186, 255) },
+    purple = { Color3.fromRGB(45,  32,  75), Color3.fromRGB(168, 120, 255) },
+    teal   = { Color3.fromRGB(18,  58,  50), Color3.fromRGB(56,  224, 186) },
+    orange = { Color3.fromRGB(75,  45,  20), Color3.fromRGB(255, 150, 50)  },
+    red    = { Color3.fromRGB(75,  25,  30), Color3.fromRGB(255, 96,  96)  },
+    yellow = { Color3.fromRGB(68,  55,  15), Color3.fromRGB(245, 197, 66)  },
 }
 
 -- Scaling System[cite: 1]
@@ -38,14 +37,16 @@ local sc = math.clamp(math.min((vp.X - 32) / 560, (vp.Y - 40) / 400), 0.55, 1)
 local function P(n)  return math.floor(n * sc + 0.5) end
 local function TS(n) return math.max(9, math.floor(n * sc + 0.5)) end
 
--- Glass Surface Foundation[cite: 1]
-local function applyGlass(frame, radius)
+-- True Glass Surface Foundation[cite: 1]
+local function applyGlass(frame, radius, customTransparency)
     radius = radius or 14
+    frame.BackgroundColor3 = Color3.fromRGB(32, 32, 40)
+    frame.BackgroundTransparency = customTransparency or 0.35 -- True translucent glass
 
     local bg = Instance.new("UIGradient")
     bg.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 28, 32)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(18, 18, 20)),
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 56)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(22, 22, 28)),
     })
     bg.Rotation = 90
     bg.Parent = frame
@@ -53,15 +54,15 @@ local function applyGlass(frame, radius)
     local stroke = Instance.new("UIStroke")
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Color = Color3.new(1, 1, 1)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.86
+    stroke.Thickness = 1.2
+    stroke.Transparency = 0.75
     stroke.Parent = frame
 
     local rimGrad = Instance.new("UIGradient")
     rimGrad.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0,   0.86),
-        NumberSequenceKeypoint.new(0.4, 0.96),
-        NumberSequenceKeypoint.new(1.0, 0.97),
+        NumberSequenceKeypoint.new(0,   0.50),  -- Top bright highlight edge
+        NumberSequenceKeypoint.new(0.4, 0.85),
+        NumberSequenceKeypoint.new(1.0, 0.95),  -- Bottom fade
     })
     rimGrad.Rotation = 90
     rimGrad.Parent = stroke
@@ -107,34 +108,22 @@ local function addHover(button)
     lift.Parent = button
 
     button.MouseEnter:Connect(function()
-        tweenService:Create(lift, TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0.95}):Play()
+        tweenService:Create(lift, TweenInfo.new(0.15, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0.90}):Play()
     end)
     button.MouseLeave:Connect(function()
         tweenService:Create(lift, TweenInfo.new(0.18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
     end)
 end
 
-local function fadeDescendants(container, targetTransparency, duration)
-    local info = TweenInfo.new(duration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    for _, d in ipairs(container:GetDescendants()) do
-        if d:IsA("TextLabel") or d:IsA("TextButton") or d:IsA("TextBox") then
-            tweenService:Create(d, info, {TextTransparency = targetTransparency}):Play()
-        elseif d:IsA("ImageLabel") or d:IsA("ImageButton") then
-            tweenService:Create(d, info, {ImageTransparency = targetTransparency}):Play()
-        end
-    end
-end
-
 -- Notification Toast System[cite: 1]
 function MuyeHub:Notify(title, message, tintKey)
-    local t = TINTS[tintKey] or TINTS.blue
+    local t = TINTS[tintKey] or TINTS.purple
     local W, H = P(260), P(64)
     local PILL_W, PILL_H = P(120), P(30)
 
     local cg = Instance.new("CanvasGroup")
     cg.Name = "Toast"
     cg.Parent = coreGui:FindFirstChild("MuyeHubGui") or coreGui
-    cg.BackgroundColor3 = Color3.fromRGB(22, 22, 26)
     cg.BackgroundTransparency = 0
     cg.BorderSizePixel = 0
     cg.GroupTransparency = 1
@@ -146,7 +135,7 @@ function MuyeHub:Notify(title, message, tintKey)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, PILL_H / 2)
     corner.Parent = cg
-    applyGlass(cg, PILL_H / 2)
+    applyGlass(cg, PILL_H / 2, 0.25)
 
     local titleLbl = Instance.new("TextLabel")
     titleLbl.Name = "Title"
@@ -214,18 +203,17 @@ function MuyeHub:CreateWindow(config)
     pcall(function() screenGui.Parent = coreGui end)
     if not screenGui.Parent then screenGui.Parent = localPlayer:WaitForChild("PlayerGui") end
 
-    -- Main CanvasGroup Window for butter-smooth entry/exit
+    -- Main Translucent Glass Window
     local window = Instance.new("CanvasGroup")
     window.Name = "Window"
     window.Parent = screenGui
-    window.BackgroundColor3 = Color3.fromRGB(18, 18, 20)
     window.BorderSizePixel = 0
     window.GroupTransparency = 1
-    local wW, wH = P(580), P(380)
+    let wW, wH = P(580), P(380)
     window.Size = UDim2.fromOffset(wW, wH)
-    window.Position = UDim2.new(0.5, -wW/2, 0.5, -wH/2 + P(10)) -- 10px drop entry
+    window.Position = UDim2.new(0.5, -wW/2, 0.5, -wH/2 + P(10))
     window.ZIndex = 50
-    applyGlass(window, 14)
+    applyGlass(window, 14, 0.32) -- Gorgeous frosted glass transparency
 
     -- Drop Shadow[cite: 1]
     local shadow = Instance.new("ImageLabel")
@@ -235,15 +223,15 @@ function MuyeHub:CreateWindow(config)
     shadow.BorderSizePixel = 0
     shadow.AnchorPoint = Vector2.new(0.5, 0.5)
     shadow.Position = UDim2.fromScale(0.5, 0.5)
-    shadow.Size = UDim2.new(1, P(40), 1, P(40))
+    shadow.Size = UDim2.new(1, P(50), 1, P(50))
     shadow.ZIndex = window.ZIndex - 1
     shadow.Image = "rbxassetid://6014261993"
     shadow.ImageColor3 = Color3.new(0, 0, 0)
-    shadow.ImageTransparency = 0.45
+    shadow.ImageTransparency = 0.35
     shadow.ScaleType = Enum.ScaleType.Slice
     shadow.SliceCenter = Rect.new(49, 49, 450, 450)
 
-    -- Entrance animation (Quint Out open)[cite: 1]
+    -- Entrance animation[cite: 1]
     tweenService:Create(window, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
         Position = UDim2.new(0.5, -wW/2, 0.5, -wH/2),
         GroupTransparency = 0
@@ -274,6 +262,7 @@ function MuyeHub:CreateWindow(config)
     badge.Name = "Badge"
     badge.Parent = titleBar
     badge.BackgroundColor3 = accent[1]
+    badge.BackgroundTransparency = 0.2
     badge.BorderSizePixel = 0
     badge.Position = UDim2.fromOffset(P(16) + titleLbl.TextBounds.X + P(10), P(15))
     badge.Size = UDim2.fromOffset(P(54), P(18))
@@ -286,7 +275,7 @@ function MuyeHub:CreateWindow(config)
     badgeLbl.Font = Enum.Font.GothamBold
     badgeLbl.TextSize = TS(10)
     badgeLbl.TextColor3 = accent[2]
-    badgeLbl.Text = "V1.0"
+    badgeLbl.Text = "V1.1"
     badgeLbl.Size = UDim2.fromScale(1, 1)
     badgeLbl.ZIndex = 53
 
@@ -315,8 +304,8 @@ function MuyeHub:CreateWindow(config)
     local sidebar = Instance.new("Frame")
     sidebar.Name = "Sidebar"
     sidebar.Parent = window
-    sidebar.BackgroundColor3 = Color3.new(1, 1, 1)
-    sidebar.BackgroundTransparency = 0.96
+    sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
+    sidebar.BackgroundTransparency = 0.5
     sidebar.BorderSizePixel = 0
     sidebar.Position = UDim2.fromOffset(P(12), P(48))
     sidebar.Size = UDim2.new(0, P(140), 1, -P(60))
@@ -362,7 +351,6 @@ function MuyeHub:CreateWindow(config)
         windowObj.TabCount = windowObj.TabCount + 1
         local index = windowObj.TabCount
 
-        -- Tab Button in Sidebar
         local tabBtn = Instance.new("TextButton")
         tabBtn.Name = "Tab_" .. tabName
         tabBtn.Parent = windowObj.TabsList
@@ -381,17 +369,14 @@ function MuyeHub:CreateWindow(config)
         addHover(tabBtn)
         makePressable(tabBtn, 0.97)
 
-        -- Page Frame
-        local page = Instance.new("$CanvasGroup" and "CanvasGroup" or "Frame") -- CanvasGroup for stunning inner tab fade!
+        local page = Instance.new("CanvasGroup")
         page.Name = "Page_" .. tabName
         page.Parent = windowObj.PagesContainer
         page.BackgroundTransparency = 1
         page.BorderSizePixel = 0
         page.Size = UDim2.fromScale(1, 1)
         page.Visible = false
-        if page:IsA("CanvasGroup") then
-            page.GroupTransparency = 1
-        end
+        page.GroupTransparency = 1
         page.ZIndex = 52
 
         local pageScroll = Instance.new("ScrollingFrame")
@@ -413,17 +398,14 @@ function MuyeHub:CreateWindow(config)
             pageScroll.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + P(10))
         end)
 
-        -- Select Tab Logic with Gorgeous Animation
         local function selectTab()
             if windowObj.ActiveTab == tabName then return end
             windowObj.ActiveTab = tabName
 
             for _, child in ipairs(windowObj.PagesContainer:GetChildren()) do
-                if child:IsA("CanvasGroup") or child:IsA("Frame") then
+                if child:IsA("CanvasGroup") then
                     if child.Visible then
-                        if child:IsA("CanvasGroup") then
-                            tweenService:Create(child, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1}):Play()
-                        end
+                        tweenService:Create(child, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1}):Play()
                         task.delay(0.15, function() child.Visible = false end)
                     end
                 end
@@ -438,55 +420,43 @@ function MuyeHub:CreateWindow(config)
                 end
             end
 
-            -- Highlight Active Tab Button
             tweenService:Create(tabBtn, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
                 TextColor3 = C.TEXT,
-                BackgroundTransparency = 0.92
+                BackgroundTransparency = 0.75
             }):Play()
             tabBtn.BackgroundColor3 = accent[2]
 
-            -- Fade & Slide In New Page
             page.Visible = true
             page.Position = UDim2.fromOffset(0, P(8))
-            if page:IsA("CanvasGroup") then
-                page.GroupTransparency = 1
-            end
+            page.GroupTransparency = 1
 
             tweenService:Create(page, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                Position = UDim2.fromOffset(0, 0)
+                Position = UDim2.fromOffset(0, 0),
+                GroupTransparency = 0
             }):Play()
-
-            if page:IsA("CanvasGroup") then
-                tweenService:Create(page, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                    GroupTransparency = 0
-                }):Play()
-            end
         end
 
         tabBtn.MouseButton1Click:Connect(selectTab)
+        if index == 1 then selectTab() end
 
-        if index == 1 then
-            selectTab() -- Auto select first tab
-        end
-
-        -- Tab Component API
         local tabObj = {}
 
-        -- Toggle Component
+        -- Glass Toggle Component
         function tabObj:AddToggle(label, subLabel, default, callback)
             local ROW_H = P(46)
             local row = Instance.new("TextButton")
             row.Name = "Toggle_" .. label
             row.Parent = pageScroll
-            row.BackgroundTransparency = 1
+            row.BackgroundTransparency = 0.65
+            row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
             row.BorderSizePixel = 0
             row.Text = ""
             row.AutoButtonColor = false
             row.Size = UDim2.new(1, 0, 0, ROW_H)
             row.ZIndex = 54
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0, P(10))
             makePressable(row, 0.985)
             addHover(row)
-            applyGlass(row, 10)
 
             local mainLbl = Instance.new("TextLabel")
             mainLbl.Parent = row
@@ -553,19 +523,20 @@ function MuyeHub:CreateWindow(config)
             return {Set = setState}
         end
 
-        -- Button Component
+        -- Glass Button Component
         function tabObj:AddButton(label, callback)
             local btnH = P(40)
             local btn = Instance.new("TextButton")
             btn.Name = "Button_" .. label
             btn.Parent = pageScroll
-            btn.BackgroundColor3 = Color3.fromRGB(28, 28, 32)
+            btn.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+            btn.BackgroundTransparency = 0.65
             btn.BorderSizePixel = 0
             btn.Size = UDim2.new(1, 0, 0, btnH)
             btn.AutoButtonColor = false
             btn.Text = ""
             btn.ZIndex = 54
-            applyGlass(btn, 10)
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, P(10))
             makePressable(btn, 0.98)
             addHover(btn)
 
@@ -584,18 +555,18 @@ function MuyeHub:CreateWindow(config)
             end)
         end
 
-        -- Slider Component
+        -- Glass Slider Component
         function tabObj:AddSlider(label, min, max, default, callback)
             local sliderH = P(54)
             local row = Instance.new("Frame")
             row.Name = "Slider_" .. label
             row.Parent = pageScroll
-            row.BackgroundColor3 = Color3.new(1, 1, 1)
-            row.BackgroundTransparency = 0.97
+            row.BackgroundColor3 = Color3.fromRGB(38, 38, 48)
+            row.BackgroundTransparency = 0.65
             row.BorderSizePixel = 0
             row.Size = UDim2.new(1, 0, 0, sliderH)
             row.ZIndex = 54
-            applyGlass(row, 10)
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0, P(10))
 
             local lbl = Instance.new("TextLabel")
             lbl.Parent = row
@@ -623,7 +594,7 @@ function MuyeHub:CreateWindow(config)
 
             local trackBar = Instance.new("TextButton")
             trackBar.Parent = row
-            trackBar.BackgroundColor3 = Color3.fromRGB(38, 38, 44)
+            trackBar.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
             trackBar.BorderSizePixel = 0
             trackBar.Position = UDim2.fromOffset(P(12), P(34))
             trackBar.Size = UDim2.new(1, -P(24), 0, P(6))
