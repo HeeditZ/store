@@ -1155,12 +1155,10 @@ local function playLoading(onComplete)
         tween(sub, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0})
         tween(barBg, TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0.86})
         tween(status, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0})
-
-        -- shine sweeps across the title
         task.spawn(function()
             for _ = 1, 3 do
-                titleGrad.Offset = UDim2.fromScale(-1, 0)
-                tween(titleGrad, TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Offset = UDim2.fromScale(1, 0)})
+                titleGrad.Offset = Vector2.new(-1, 0)
+                tween(titleGrad, TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {Offset = Vector2.new(1, 0)})
                 task.wait(1.0)
             end
         end)
