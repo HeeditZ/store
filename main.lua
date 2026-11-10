@@ -209,7 +209,7 @@ function MuyeHub:CreateWindow(config)
     window.Parent = screenGui
     window.BorderSizePixel = 0
     window.GroupTransparency = 1
-    let wW, wH = P(580), P(380)
+    local wW, wH = P(580), P(380)
     window.Size = UDim2.fromOffset(wW, wH)
     window.Position = UDim2.new(0.5, -wW/2, 0.5, -wH/2 + P(10))
     window.ZIndex = 50
